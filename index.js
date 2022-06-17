@@ -8,29 +8,6 @@ const {
   publicKeyToAddress,
 } = require("./helper");
 
-const RETRY_DELAY = 1000;
-let params = {
-  feeAmount: "2",
-  feeGas: "3000",
-  fromAddress: "oasis1qzpwxt85r2zx50egjet8f5sagredc28pfuqzlzz8",
-  method: "staking.Transfer",
-  // nonce: 46,
-  shares: "NaN",
-  toAddress: "oasis1qrry5phpkctpqhxrgdzvsdze57x8m488p5ze52g2",
-  amount: "1",
-  currentAccount: {
-    accountName: "Account 1",
-    address: "oasis1qrry5phpkctpqhxrgdzvsdze57x8m488p5ze52g2",
-    hdPath: 0,
-    isUnlocked: true,
-    localAccount: { keyringData: "keyringData" },
-    publicKey:
-      "04f9eeb54a83a82b76e7dfc53efa8c7e8ac9bafbd9efb8ac608134819f2b694c",
-    type: "WALLET_INSIDE",
-    typeIndex: 1,
-  },
-};
-
 const buildTransfer = async (nic, signer, to, amount) => {
   const tw = oasis.staking.transferWrapper();
   const nonce = await nic.consensusGetSignerNonce({
@@ -65,7 +42,7 @@ const buildTransfer = async (nic, signer, to, amount) => {
   originalPrivateKey: ${originalPrivateKey}
   walletAddress: ${walletAddress}
   publicKey: ${publicKey}
-  privateKey (secret key): ${privateKey}`);
+  privateKey (secret key): ${privateKey}\n`);
 
   const nic = new oasis.client.NodeInternal("https://testnet.grpc.oasis.dev");
   const bytes = hex2uint(privateKey);
