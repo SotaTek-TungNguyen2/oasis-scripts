@@ -10,10 +10,11 @@ const {
 
 const buildTransfer = async (nic, signer, to, amount) => {
   const tw = oasis.staking.transferWrapper();
-  const nonce = await nic.consensusGetSignerNonce({
-    account_address: await oasis.staking.addressFromPublicKey(signer.public()),
-    height: 0,
-  });
+  const nonce = 8; 
+  // await nic.consensusGetSignerNonce({
+  //   account_address: await oasis.staking.addressFromPublicKey(signer.public()),
+  //   height: 0,
+  // });
   tw.setNonce(nonce);
   tw.setFeeAmount(oasis.quantity.fromBigInt(0n));
   tw.setBody({
@@ -21,7 +22,7 @@ const buildTransfer = async (nic, signer, to, amount) => {
     amount: oasis.quantity.fromBigInt(amount),
   });
 
-  const gas = await tw.estimateGas(nic, signer.public());
+  const gas = 1264; //await tw.estimateGas(nic, signer.public());
   tw.setFeeGas(gas);
   return tw;
 };
@@ -51,7 +52,13 @@ const buildTransfer = async (nic, signer, to, amount) => {
     "this key is not important"
   );
   const receiver = "oasis1qrry5phpkctpqhxrgdzvsdze57x8m488p5ze52g2";
-  const tx = await buildTransfer(nic, signer, receiver, 1);
+  const tw = await buildTransfer(nic, signer, receiver, 1);
 
-  console.log(`- tx:`, tx);
+  const chainContext = '50304f98ddb656620ea817cc1446c401752a05a249b36c9b90dba4616829977a' //await nic.consensusGetChainContext();
+  console.log(`- tx:`, tw);
+  console.log(`-chainContext:`, chainContext);
+  /**sign transaction */
+  await tw.sign(new oasis.signature.BlindContextSigner(signer), chainContext);
+  const submitResult = await tw.submit(nic)
+  console.log(`-submitResult:`, submitResult);
 })();
