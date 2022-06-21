@@ -1,3 +1,9 @@
+// Install in the global context so "new XMLHttpRequest()" uses the custom XMLHttpRequest
+const { JSDOM } = require("jsdom");
+const { window } = new JSDOM();
+
+global.XMLHttpRequest = window.XMLHttpRequest;
+
 const oasis = require("@oasisprotocol/client");
 const nacl = require("tweetnacl");
 const { fromBech32 } = require("./decode");
@@ -10,11 +16,14 @@ const {
 
 const buildTransfer = async (nic, signer, to, amount) => {
   const tw = oasis.staking.transferWrapper();
-  const nonce = 8; 
-  // await nic.consensusGetSignerNonce({
-  //   account_address: await oasis.staking.addressFromPublicKey(signer.public()),
-  //   height: 0,
-  // });
+  const shortPublicKey = await oasis.staking.addressFromPublicKey(
+    signer.public()
+  );
+  const nonce = await nic.consensusGetSignerNonce({
+    account_address: shortPublicKey,
+    height: 0,
+  });
+  console.log(`--nonce:`, nonce);
   tw.setNonce(nonce);
   tw.setFeeAmount(oasis.quantity.fromBigInt(0n));
   tw.setBody({
@@ -22,7 +31,8 @@ const buildTransfer = async (nic, signer, to, amount) => {
     amount: oasis.quantity.fromBigInt(amount),
   });
 
-  const gas = 1264; //await tw.estimateGas(nic, signer.public());
+  const gas = await tw.estimateGas(nic, signer.public());
+  console.log(`---gas:`, gas);
   tw.setFeeGas(gas);
   return tw;
 };
@@ -52,13 +62,15 @@ const buildTransfer = async (nic, signer, to, amount) => {
     "this key is not important"
   );
   const receiver = "oasis1qrry5phpkctpqhxrgdzvsdze57x8m488p5ze52g2";
-  const tw = await buildTransfer(nic, signer, receiver, 1);
+  console.log(`receiver: ${receiver}\n`);
 
-  const chainContext = '50304f98ddb656620ea817cc1446c401752a05a249b36c9b90dba4616829977a' //await nic.consensusGetChainContext();
+  const tw = await buildTransfer(nic, signer, receiver, 1000000000);
   console.log(`- tx:`, tw);
+
+  const chainContext = await nic.consensusGetChainContext();
   console.log(`-chainContext:`, chainContext);
   /**sign transaction */
   await tw.sign(new oasis.signature.BlindContextSigner(signer), chainContext);
-  const submitResult = await tw.submit(nic)
+  const submitResult = await tw.submit(nic).catch(error => console.log(`==submit error:`, error));
   console.log(`-submitResult:`, submitResult);
 })();
